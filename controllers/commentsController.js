@@ -1,50 +1,13 @@
-// requried modules
-const express = require("express");
-const db = require("./models");
-const rowdy = require("rowdy-logger");
-const morgan = require("morgan");
+// instantiate the express router
+const router = require("express").Router();
+// require models
+const db = require("../models");
 
-// config express app
-const app = express();
-const PORT = 3000;
-const rowdyResults = rowdy.begin(app);
-
-// express middlewares
-app.use(morgan("dev"));
-app.use(express.urlencoded({ extended: false }));
-
-/**
- * home route
- */
-
-// GET /comments - READ all comments
-app.get("/comments", async (req, res) => {
-  try {
-    const comments = await db.comment.findAll();
-    res.json({ comments: comments });
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ message: "bad request" });
-  }
-});
-
-// POST /comments - CREATE a new comment
-app.post("/comments", async (req, res) => {
-  try {
-    const newComment = await db.comment.create({
-      nameOfCreater: req.body.nameOfCreater,
-      content: req.body.content,
-    });
-    res.redirect(`/comments/${newComment.id}`);
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ message: "bad request" });
-  }
-});
+// routes should be mounted on the router here
 
 // GET /authors/:id - READ a specific author and inlcude their articles
 // GET /comments/:id - READ a specific article and inlcude their comments
-app.get("/comments/:id", async (req, res) => {
+router.get("/comments/:id", async (req, res) => {
   try {
     const article = await db.article.findOne({
       where: { id: req.params.id },
@@ -60,7 +23,7 @@ app.get("/comments/:id", async (req, res) => {
 // POST /authors/:id/articles - CREATE a new article associated with an author
 
 // POST /articles/:id/comments - CREATE a new comment associated with an article
-app.post("/articles/:id/comments", async (req, res) => {
+router.post("/articles/:id/comments", async (req, res) => {
   try {
     const article = await db.article.findByPk(req.params.id, {
       include: db.comment,
@@ -78,7 +41,39 @@ app.post("/articles/:id/comments", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+router.listen(PORT, () => {
   console.log(`listening on port ${PORT}`);
   rowdyResults.print();
 });
+
+// export the router so we can require in server.js
+module.exports = router;
+
+// GET /comments - READ all comments
+/*
+router.get("/comments", async (req, res) => {
+  try {
+    const comments = await db.comment.findAll();
+    res.json({ comments: comments });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ message: "bad request" });
+  }
+});
+*/
+
+// POST /comments - CREATE a new comment
+/*
+router.post("/comments", async (req, res) => {
+  try {
+    const newComment = await db.comment.create({
+      nameOfCreater: req.body.nameOfCreater,
+      content: req.body.content,
+    });
+    res.redirect(`/comments/${newComment.id}`);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ message: "bad request" });
+  }
+});
+*/
